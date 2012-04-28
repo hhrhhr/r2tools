@@ -1,15 +1,14 @@
 #include <QtCore/QCoreApplication>
 #include <QDebug>
 #include <QStringList>
-#include "tab2csv.h"
-#include "tab2xml.h"
+#include "tab2txt.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     
     if (argc < 3) {
-        qWarning() << "wrong count of arguments";
+        qWarning() << "see README";
         return 1;
     }
 
@@ -18,11 +17,11 @@ int main(int argc, char *argv[])
     QString target = a.arguments().at(3);
 
     if (action == "tab2csv") {
-        Tab2csv t2c;
-        t2c.convert(source, target);
+        Tab2txt t2c;
+        t2c.convert(source, target, "csv");
     } else if (action == "tab2xml") {
-        Tab2xml t2x;
-        t2x.convert(source, target);
+        Tab2txt t2x;
+        t2x.convert(source, target, "xml");
     }
 
 //    return a.exec();

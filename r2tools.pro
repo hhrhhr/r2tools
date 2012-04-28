@@ -16,9 +16,7 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    tab2csv.cpp \
-    tab2xml.cpp
+    tab2txt.cpp
 
 HEADERS += \
-    tab2csv.h \
-    tab2xml.h
+    tab2txt.h

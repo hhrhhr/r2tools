@@ -1,16 +1,15 @@
-#include "tab2xml.h"
+#include "tab2txt.h"
 #include <QFile>
 #include <QDateTime>
-#include <QStringList>
 #include <QFileInfo>
 #include <QDebug>
 
-Tab2xml::Tab2xml(QObject *parent) :
+Tab2txt::Tab2txt(QObject *parent) :
     QObject(parent)
 {
 }
 
-void Tab2xml::convert(QString tabName, QString xmlPath)
+void Tab2txt::convert(QString tabName, QString txtPath, QString outType)
 {
 // input
     QFile tab(tabName);
@@ -25,22 +24,13 @@ void Tab2xml::convert(QString tabName, QString xmlPath)
     QDataStream in(&tab);
     in.setByteOrder(QDataStream::LittleEndian);
     QFileInfo fi(tab);
-
-// output
-    QString basename = fi.baseName();
-    QFile xml(xmlPath + "/" + basename + ".xml");
-    qDebug() << xml.fileName();
-    if (!xml.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qDebug() << "output file open error";
-        return;
-    }
-    QTextStream out(&xml);
+    basename = fi.baseName();
 
 // read
     quint32 magic;
     in >> magic;
     if (magic != 826425684UL) {
-        qDebug() << "magic not match";
+        qDebug() << "magic not match:" << magic;
         return;
     }
     qDebug() << "magic  : TAB1";
@@ -48,7 +38,7 @@ void Tab2xml::convert(QString tabName, QString xmlPath)
     quint16 version;
     in >> version;
     if (version != 2) {
-        qDebug() << "version not match";
+        qDebug() << "version not match:" << version;
         return;
     }
     qDebug() << "version: 2";
@@ -70,7 +60,6 @@ void Tab2xml::convert(QString tabName, QString xmlPath)
     in >> columns;
     qDebug() << "columns:" << columns;
 
-    QList<QStringList> cols;
     QStringList col;
 
     quint32 rowsTmp = 0;
@@ -110,21 +99,71 @@ void Tab2xml::convert(QString tabName, QString xmlPath)
                 quint16 textLenght;
                 in >> textLenght;
 
-                QChar textString[textLenght];
-                k = 0;
-                while (k < textLenght)
-                    in >> textString[k++];
-                col << QString(textString, textLenght);
+                if (format == 0) {
+                    // TODO: check this
+                    char textString[textLenght];
+                    char *t = textString;
+                    k = 0;
+                    while (k < textLenght) {
+                        in >> t;
+                        k++;
+                    }
+                    col << QString(textString);
+                } else if (format == 1) {
+                    QChar textString[textLenght];
+                    k = 0;
+                    while (k < textLenght)
+                        in >> textString[k++];
+                    col << QString(textString, textLenght);
+                }
             }
             cols << col;
             col.clear();
+        } else {
+            qDebug() << "not attached!!!";
         }
     }
-
     tab.close();
     qDebug() << "tab readed";
 
-// write
+    m_txtPath = txtPath;
+    if (outType == "xml")
+        save2xml();
+    else if (outType == "csv")
+        save2cvs();
+}
+
+void Tab2txt::save2cvs()
+{
+    QFile csv(m_txtPath + "/" + basename + ".csv");
+//    qDebug() << csv.fileName();
+    if (!csv.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qDebug() << "output file open error";
+        return;
+    }
+    QTextStream out(&csv);
+    QString line;
+    for (int i = 0; i < cols.at(0).size(); ++i) {
+        for (int j = 0; j < cols.size(); ++j) {
+            line.append(cols.at(j).at(i)).append(";");
+        }
+        out << line << endl;
+        line.clear();
+    }
+
+    csv.close();
+    qDebug() << "csv is written successfully";
+}
+
+void Tab2txt::save2xml()
+{
+    QFile xml(m_txtPath + "/" + basename + ".xml");
+//    qDebug() << xml.fileName();
+    if (!xml.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qDebug() << "output file open error";
+        return;
+    }
+    QTextStream out(&xml);
     QString tag;
     out << "<" << basename << ">" << endl;
     for (int i = 1; i < cols.at(0).size(); ++i) {
@@ -141,10 +180,10 @@ void Tab2xml::convert(QString tabName, QString xmlPath)
     out << "</" << basename << ">" << endl;
 
     xml.close();
-    qDebug() << "xml writed";
+    qDebug() << "xml is written successfully";
 }
 
-void Tab2xml::setLangTag(const QString lng, QString &tag)
+void Tab2txt::setLangTag(const QString lng, QString &tag)
 {
     if (lng == "German_Text")
         tag = "DE";
@@ -156,10 +195,8 @@ void Tab2xml::setLangTag(const QString lng, QString &tag)
         tag = "FR";
     else if (lng == "Italian_Text")
         tag = "IT";
-    else if (lng == "Spanish_Text")
+    else if (lng == "Spanish_Text" || lng == "Spanish_text")
         tag = "SP";
-    else if (lng == "Spanish_text")     //
-        tag = "SP";                     //
     else if (lng == "Russian_Text")
         tag = "RU";
     else if (lng == "Polish_Text")
