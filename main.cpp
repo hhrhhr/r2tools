@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QStringList>
 #include "tab2csv.h"
+#include "tab2xml.h"
 
 int main(int argc, char *argv[])
 {
@@ -19,6 +20,9 @@ int main(int argc, char *argv[])
     if (action == "tab2csv") {
         Tab2csv t2c;
         t2c.convert(source, target);
+    } else if (action == "tab2xml") {
+        Tab2xml t2x;
+        t2x.convert(source, target);
     }
 
 //    return a.exec();
