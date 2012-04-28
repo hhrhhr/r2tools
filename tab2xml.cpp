@@ -12,6 +12,7 @@ Tab2xml::Tab2xml(QObject *parent) :
 
 void Tab2xml::convert(QString tabName, QString xmlPath)
 {
+// input
     QFile tab(tabName);
     if (!tab.exists()) {
         qDebug() << "file not found";
@@ -23,7 +24,19 @@ void Tab2xml::convert(QString tabName, QString xmlPath)
     }
     QDataStream in(&tab);
     in.setByteOrder(QDataStream::LittleEndian);
+    QFileInfo fi(tab);
 
+// output
+    QString basename = fi.baseName();
+    QFile xml(xmlPath + "/" + basename + ".xml");
+    qDebug() << xml.fileName();
+    if (!xml.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qDebug() << "output file open error";
+        return;
+    }
+    QTextStream out(&xml);
+
+// read
     quint32 magic;
     in >> magic;
     if (magic != 826425684UL) {
@@ -60,6 +73,7 @@ void Tab2xml::convert(QString tabName, QString xmlPath)
     QList<QStringList> cols;
     QStringList col;
 
+    quint32 rowsTmp = 0;
     for (uint i = 0; i < columns; ++i) {
         quint8 attached;
         in >> attached;
@@ -84,6 +98,14 @@ void Tab2xml::convert(QString tabName, QString xmlPath)
             in >> rows;
 //            qDebug() << "rows" << rows;
 
+            // //check for bad numbers
+            if (i > 0 && rows != rowsTmp) {
+                qDebug() << "number of rows is different";
+                return;
+            }
+            rowsTmp = rows;
+            // \\check for bad numbers
+
             for (uint j = 0; j < rows; ++j) {
                 quint16 textLenght;
                 in >> textLenght;
@@ -94,36 +116,32 @@ void Tab2xml::convert(QString tabName, QString xmlPath)
                     in >> textString[k++];
                 col << QString(textString, textLenght);
             }
-
             cols << col;
             col.clear();
         }
     }
+
     tab.close();
+    qDebug() << "tab readed";
 
-    QFileInfo fi(tab);
-    QFile xml(xmlPath + "/" + fi.baseName() + ".xml");
-    qDebug() << xml.fileName();
-    if (!xml.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qDebug() << "output file open error";
-        return;
-    }
-    QTextStream out(&xml);
-
+// write
     QString tag;
-    out << "<" << fi.baseName() << ">" << endl;
+    out << "<" << basename << ">" << endl;
     for (int i = 1; i < cols.at(0).size(); ++i) {
         out << "  <string id=\"" << cols.at(0).at(i) << "\">" << endl;
         for (int j = 1; j < cols.size(); ++j) {
-            setLangTag(cols.at(j).at(0), tag);
+//            setLangTag(cols.at(j).at(0), tag);
+            tag = cols.at(j).at(0);
             out << "    <lang id=\"" << tag << "\">";
             out << cols.at(j).at(i);
             out << "</" << tag << ">" << endl;
         }
-        out << "  </string>" << endl;
+        out << "  </string>" << endl << endl;
     }
-    out << "</" << fi.baseName() << ">" << endl;
+    out << "</" << basename << ">" << endl;
+
     xml.close();
+    qDebug() << "xml writed";
 }
 
 void Tab2xml::setLangTag(const QString lng, QString &tag)
@@ -140,6 +158,8 @@ void Tab2xml::setLangTag(const QString lng, QString &tag)
         tag = "IT";
     else if (lng == "Spanish_Text")
         tag = "SP";
+    else if (lng == "Spanish_text")     //
+        tag = "SP";                     //
     else if (lng == "Russian_Text")
         tag = "RU";
     else if (lng == "Polish_Text")
@@ -147,5 +167,5 @@ void Tab2xml::setLangTag(const QString lng, QString &tag)
     else if (lng == "Czech_Text")
         tag = "CZ";
     else
-        tag = "XX";
+        tag = lng;
 }
