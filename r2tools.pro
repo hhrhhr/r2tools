@@ -20,3 +20,6 @@ SOURCES += main.cpp \
 
 HEADERS += \
     tab2txt.h
+
+OTHER_FILES += \
+    README.md
