@@ -9,6 +9,7 @@ tools for Risen 2
 * `command`
  - `tab2csv` - convert tab file to CSV (semicolon delimeter)
  - `tab2xml` - convert tab file to XML
+ - `img2dds` - convert _ximg file to DDS
 * `input`
  - path to input file
 * `output`
