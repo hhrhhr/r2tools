@@ -2,6 +2,8 @@
 
 tools for Risen 2
 
+used info from [Nico’s Risen Research Repository](http://www.bendlins.de/nico/risen/)
+
 #usage
 
 `r2tool command input output`
