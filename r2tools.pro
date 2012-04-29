@@ -16,10 +16,12 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    tab2txt.cpp
+    tab2txt.cpp \
+    img2dds.cpp
 
 HEADERS += \
-    tab2txt.h
+    tab2txt.h \
+    img2dds.h
 
 OTHER_FILES += \
     README.md

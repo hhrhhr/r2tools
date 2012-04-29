@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QStringList>
 #include "tab2txt.h"
+#include "img2dds.h"
 
 int main(int argc, char *argv[])
 {
@@ -22,6 +23,11 @@ int main(int argc, char *argv[])
     } else if (action == "tab2xml") {
         Tab2txt t2x;
         t2x.convert(source, target, "xml");
+    } else if (action == "img2dds") {
+        Img2dds i2m;
+        i2m.convert(source, target);
+    } else {
+        qWarning() << "wrong action";
     }
 
 //    return a.exec();
